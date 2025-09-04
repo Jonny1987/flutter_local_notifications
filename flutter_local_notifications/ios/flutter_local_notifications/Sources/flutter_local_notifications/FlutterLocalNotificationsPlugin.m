@@ -131,6 +131,7 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+  NSLog(@"[FlutterLocalNotificationsPlugin] registerWithRegistrar called");
   FlutterMethodChannel *channel =
       [FlutterMethodChannel methodChannelWithName:CHANNEL
                                   binaryMessenger:[registrar messenger]];
@@ -147,11 +148,13 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 + (void)setPluginRegistrantCallback:(FlutterPluginRegistrantCallback)callback {
+  NSLog(@"[FlutterLocalNotificationsPlugin] setPluginRegistrantCallback called");
   registerPlugins = callback;
 }
 
 - (instancetype)initWithChannel:(FlutterMethodChannel *)channel
                       registrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+  NSLog(@"[FlutterLocalNotificationsPlugin] initWithChannel:registrar called");
   self = [super init];
 
   if (self) {
@@ -165,6 +168,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)handleMethodCall:(FlutterMethodCall *)call
                   result:(FlutterResult)result {
+  NSLog(@"[FlutterLocalNotificationsPlugin] handleMethodCall:result called with method: %@", call.method);
   if ([INITIALIZE_METHOD isEqualToString:call.method]) {
     [self initialize:call.arguments result:result];
   } else if ([GET_CALLBACK_METHOD isEqualToString:call.method]) {
@@ -212,6 +216,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)pendingNotificationRequests:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] pendingNotificationRequests called");
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
   [center getPendingNotificationRequestsWithCompletionHandler:^(
@@ -244,6 +249,7 @@ static FlutterError *getFlutterError(NSError *error) {
 - (void)configureNotificationCategories:(NSDictionary *_Nonnull)arguments
                   withCompletionHandler:(void (^)(void))completionHandler
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] configureNotificationCategories called");
   if ([self containsKey:@"notificationCategories" forDictionary:arguments]) {
     NSMutableSet<UNNotificationCategory *> *notificationCategories =
         [NSMutableSet set];
@@ -312,6 +318,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)getActiveNotifications:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] getActiveNotifications called");
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
   [center getDeliveredNotificationsWithCompletionHandler:^(
@@ -342,6 +349,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)initialize:(NSDictionary *_Nonnull)arguments
             result:(FlutterResult _Nonnull)result {
+  NSLog(@"[FlutterLocalNotificationsPlugin] initialize:result called");
   bool requestedSoundPermission = false;
   bool requestedAlertPermission = false;
   bool requestedBadgePermission = false;
@@ -420,6 +428,7 @@ static FlutterError *getFlutterError(NSError *error) {
 - (void)requestPermissions:(NSDictionary *_Nonnull)arguments
 
                     result:(FlutterResult _Nonnull)result {
+  NSLog(@"[FlutterLocalNotificationsPlugin] requestPermissions:result called");
   bool soundPermission = false;
   bool alertPermission = false;
   bool badgePermission = false;
@@ -454,6 +463,7 @@ static FlutterError *getFlutterError(NSError *error) {
          provisionalPermission:(bool)provisionalPermission
             criticalPermission:(bool)criticalPermission
                         result:(FlutterResult _Nonnull)result {
+  NSLog(@"[FlutterLocalNotificationsPlugin] requestPermissionsImpl called with sound:%d alert:%d badge:%d provisional:%d critical:%d", soundPermission, alertPermission, badgePermission, provisionalPermission, criticalPermission);
   if (!soundPermission && !alertPermission && !badgePermission &&
       !criticalPermission) {
     result(@NO);
@@ -490,6 +500,7 @@ static FlutterError *getFlutterError(NSError *error) {
 - (void)checkPermissions:(NSDictionary *_Nonnull)arguments
                   result:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] checkPermissions:result called");
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
 
@@ -524,11 +535,13 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 - (NSString *)getIdentifier:(id)arguments {
+  NSLog(@"[FlutterLocalNotificationsPlugin] getIdentifier called");
   return [arguments[ID] stringValue];
 }
 
 - (void)show:(NSDictionary *_Nonnull)arguments
       result:(FlutterResult _Nonnull)result API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] show:result called");
   UNMutableNotificationContent *content =
       [self buildStandardNotificationContent:arguments result:result];
   [self addNotificationRequest:[self getIdentifier:arguments]
@@ -539,6 +552,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)zonedSchedule:(NSDictionary *_Nonnull)arguments
                result:(FlutterResult _Nonnull)result API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] zonedSchedule:result called");
   UNMutableNotificationContent *content =
       [self buildStandardNotificationContent:arguments result:result];
   UNCalendarNotificationTrigger *trigger =
@@ -552,6 +566,7 @@ static FlutterError *getFlutterError(NSError *error) {
 - (void)periodicallyShow:(NSDictionary *_Nonnull)arguments
                   result:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] periodicallyShow:result called");
   UNMutableNotificationContent *content =
       [self buildStandardNotificationContent:arguments result:result];
   UNTimeIntervalNotificationTrigger *trigger =
@@ -564,6 +579,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)cancel:(NSNumber *)id
         result:(FlutterResult _Nonnull)result API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] cancel:result called with id: %@", id);
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
   NSArray *idsToRemove =
@@ -574,6 +590,7 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 - (void)cancelAll:(FlutterResult _Nonnull)result API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] cancelAll:result called");
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
   [center removeAllPendingNotificationRequests];
@@ -583,6 +600,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)cancelAllPendingNotifications:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] cancelAllPendingNotifications:result called");
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
   [center removeAllPendingNotificationRequests];
@@ -593,6 +611,7 @@ static FlutterError *getFlutterError(NSError *error) {
     buildStandardNotificationContent:(NSDictionary *)arguments
                               result:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] buildStandardNotificationContent:result called");
   UNMutableNotificationContent *content =
       [[UNMutableNotificationContent alloc] init];
   if ([self containsKey:TITLE forDictionary:arguments]) {
@@ -746,6 +765,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (UNCalendarNotificationTrigger *)buildUserNotificationCalendarTrigger:
     (id)arguments API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] buildUserNotificationCalendarTrigger called");
   NSString *scheduledDateTime = arguments[SCHEDULED_DATE_TIME];
   NSString *timeZoneName = arguments[TIME_ZONE_NAME];
 
@@ -811,7 +831,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (UNTimeIntervalNotificationTrigger *)buildUserNotificationTimeIntervalTrigger:
     (id)arguments API_AVAILABLE(ios(10.0)) {
-
+  NSLog(@"[FlutterLocalNotificationsPlugin] buildUserNotificationTimeIntervalTrigger called");
   if ([self containsKey:REPEAT_INTERVAL_MILLISECODNS forDictionary:arguments]) {
     NSInteger repeatIntervalMilliseconds =
         [arguments[REPEAT_INTERVAL_MILLISECODNS] integerValue];
@@ -847,6 +867,7 @@ static FlutterError *getFlutterError(NSError *error) {
                   presentBanner:(bool)presentBanner
                     presentList:(bool)presentList
                         payload:(NSString *)payload {
+  NSLog(@"[FlutterLocalNotificationsPlugin] buildUserDict called with id: %@", id);
   NSMutableDictionary *userDict = [[NSMutableDictionary alloc] init];
   userDict[NOTIFICATION_ID] = id;
   if (title) {
@@ -866,6 +887,7 @@ static FlutterError *getFlutterError(NSError *error) {
                         result:(FlutterResult _Nonnull)result
                        trigger:(UNNotificationTrigger *)trigger
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] addNotificationRequest called with identifier: %@", identifier);
   UNNotificationRequest *notificationRequest =
       [UNNotificationRequest requestWithIdentifier:identifier
                                            content:content
@@ -883,6 +905,12 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 - (BOOL)isAFlutterLocalNotification:(NSDictionary *)userInfo {
+  NSLog(@"[FlutterLocalNotificationsPlugin] isAFlutterLocalNotification called");
+  NSLog(@"[FlutterLocalNotificationsPlugin] NOTIFICATION_ID: %@", userInfo[NOTIFICATION_ID]);
+  NSLog(@"[FlutterLocalNotificationsPlugin] PRESENT_ALERT: %@", userInfo[PRESENT_ALERT]);
+  NSLog(@"[FlutterLocalNotificationsPlugin] PRESENT_SOUND: %@", userInfo[PRESENT_SOUND]);
+  NSLog(@"[FlutterLocalNotificationsPlugin] PRESENT_BADGE: %@", userInfo[PRESENT_BADGE]);
+  NSLog(@"[FlutterLocalNotificationsPlugin] PAYLOAD: %@", userInfo[PAYLOAD]);
   return userInfo != nil && userInfo[NOTIFICATION_ID] &&
          userInfo[PRESENT_ALERT] && userInfo[PRESENT_SOUND] &&
          userInfo[PRESENT_BADGE] && userInfo[PAYLOAD];
@@ -890,6 +918,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (void)handleSelectNotification:(NSInteger)notificationId
                          payload:(NSString *)payload {
+  NSLog(@"[FlutterLocalNotificationsPlugin] handleSelectNotification called with notificationId: %ld", (long)notificationId);
   NSMutableDictionary *arguments = [[NSMutableDictionary alloc] init];
   NSNumber *notificationIdNumber = [NSNumber numberWithInteger:notificationId];
   arguments[@"notificationId"] = notificationIdNumber;
@@ -899,6 +928,7 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 - (BOOL)containsKey:(NSString *)key forDictionary:(NSDictionary *)dictionary {
+  NSLog(@"[FlutterLocalNotificationsPlugin] containsKey:forDictionary called with key: %@", key);
   return dictionary[key] != [NSNull null] && dictionary[key] != nil;
 }
 
@@ -908,6 +938,7 @@ static FlutterError *getFlutterError(NSError *error) {
          withCompletionHandler:
              (void (^)(UNNotificationPresentationOptions))completionHandler
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] userNotificationCenter:willPresentNotification called");
   if (![self
           isAFlutterLocalNotification:notification.request.content.userInfo]) {
     return;
@@ -951,6 +982,7 @@ static FlutterError *getFlutterError(NSError *error) {
 
 - (NSMutableDictionary *)extractNotificationResponseDict:
     (UNNotificationResponse *_Nonnull)response API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] extractNotificationResponseDict called");
   NSMutableDictionary *notitificationResponseDict =
       [[NSMutableDictionary alloc] init];
   NSInteger notificationId =
@@ -983,8 +1015,14 @@ static FlutterError *getFlutterError(NSError *error) {
     didReceiveNotificationResponse:(UNNotificationResponse *)response
              withCompletionHandler:(void (^)(void))completionHandler
     API_AVAILABLE(ios(10.0)) {
+  NSLog(@"[FlutterLocalNotificationsPlugin] userNotificationCenter:didReceiveNotificationResponse called");
+  NSLog(@"[FlutterLocalNotificationsPlugin] Response details - actionIdentifier: %@, notificationId: %@", 
+        response.actionIdentifier, response.notification.request.identifier);
+  
   if (![self isAFlutterLocalNotification:response.notification.request.content
                                              .userInfo]) {
+    NSLog(@"[FlutterLocalNotificationsPlugin] Not a FlutterLocalNotification - userInfo: %@", 
+          response.notification.request.content.userInfo);
     return;
   }
 
@@ -992,42 +1030,60 @@ static FlutterError *getFlutterError(NSError *error) {
       [response.notification.request.identifier integerValue];
   NSString *payload =
       (NSString *)response.notification.request.content.userInfo[PAYLOAD];
+  
+  NSLog(@"[FlutterLocalNotificationsPlugin] Processing notification - ID: %ld, payload: %@, initialized: %@", 
+        (long)notificationId, payload ?: @"(null)", _initialized ? @"YES" : @"NO");
 
   if ([response.actionIdentifier
           isEqualToString:UNNotificationDefaultActionIdentifier]) {
+    NSLog(@"[FlutterLocalNotificationsPlugin] Default action tapped");
     if (_initialized) {
+      NSLog(@"[FlutterLocalNotificationsPlugin] Calling handleSelectNotification with ID: %ld", (long)notificationId);
       [self handleSelectNotification:notificationId payload:payload];
     } else {
+      NSLog(@"[FlutterLocalNotificationsPlugin] App not initialized, storing launch notification response");
       _launchNotificationResponseDict =
           [self extractNotificationResponseDict:response];
       _launchingAppFromNotification = true;
     }
     completionHandler();
   } else if (response.actionIdentifier != nil) {
+    NSLog(@"[FlutterLocalNotificationsPlugin] Custom action tapped: %@", response.actionIdentifier);
     NSMutableDictionary *notificationResponseDict =
         [self extractNotificationResponseDict:response];
     NSArray<NSString *> *foregroundActionIdentifiers =
         [[NSUserDefaults standardUserDefaults]
             stringArrayForKey:FOREGROUND_ACTION_IDENTIFIERS];
+    NSLog(@"[FlutterLocalNotificationsPlugin] Foreground action identifiers: %@", foregroundActionIdentifiers);
+    
     if ([foregroundActionIdentifiers indexOfObject:response.actionIdentifier] !=
         NSNotFound) {
+      NSLog(@"[FlutterLocalNotificationsPlugin] Foreground action detected");
       if (_initialized) {
+        NSLog(@"[FlutterLocalNotificationsPlugin] Invoking didReceiveNotificationResponse method with args: %@", notificationResponseDict);
         [_channel invokeMethod:@"didReceiveNotificationResponse"
                      arguments:notificationResponseDict];
       } else {
+        NSLog(@"[FlutterLocalNotificationsPlugin] App not initialized, storing launch notification response for foreground action");
         _launchNotificationResponseDict = notificationResponseDict;
         _launchingAppFromNotification = true;
       }
     } else {
+      NSLog(@"[FlutterLocalNotificationsPlugin] Background action detected, starting isolate");
       if (!actionEventSink) {
         actionEventSink = [[ActionEventSink alloc] init];
+        NSLog(@"[FlutterLocalNotificationsPlugin] Created new ActionEventSink");
       }
 
       [actionEventSink addItem:notificationResponseDict];
+      NSLog(@"[FlutterLocalNotificationsPlugin] Added notification response to ActionEventSink, starting engine");
       [_flutterEngineManager startEngineIfNeeded:actionEventSink
                                  registerPlugins:registerPlugins];
     }
 
+    completionHandler();
+  } else {
+    NSLog(@"[FlutterLocalNotificationsPlugin] No action identifier found, calling completion handler");
     completionHandler();
   }
 }
