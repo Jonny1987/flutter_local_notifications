@@ -932,6 +932,39 @@ static FlutterError *getFlutterError(NSError *error) {
   return dictionary[key] != [NSNull null] && dictionary[key] != nil;
 }
 
+- (NSString *)extractPayloadFromUserInfo:(NSDictionary *)userInfo {
+  BOOL isFlutterNotification = [self isAFlutterLocalNotification:userInfo];
+  NSString *payload;
+
+  if (isFlutterNotification) {
+    payload = (NSString *)userInfo[PAYLOAD];
+  } else {
+    // For non-Flutter notifications, use the entire userInfo as payload
+    if (userInfo != nil) {
+      // Filter out FCM-specific keys
+      NSMutableDictionary *filteredUserInfo = [userInfo mutableCopy];
+      NSArray *keysToRemove = @[@"aps", @"message_id", @"message_type", @"collapse_key", @"from", @"to", @"fcm_options"];
+
+      for (NSString *key in keysToRemove) {
+        [filteredUserInfo removeObjectForKey:key];
+      }
+
+      // Remove keys starting with "google." or "gcm."
+      for (NSString *key in [filteredUserInfo allKeys]) {
+        if ([key hasPrefix:@"google."] || [key hasPrefix:@"gcm."]) {
+          [filteredUserInfo removeObjectForKey:key];
+        }
+      }
+
+      payload = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:filteredUserInfo options:0 error:nil] encoding:NSUTF8StringEncoding];
+    } else {
+      payload = nil;
+    }
+  }
+
+  return payload;
+}
+
 #pragma mark - UNUserNotificationCenterDelegate
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
        willPresentNotification:(UNNotification *)notification
@@ -987,8 +1020,9 @@ static FlutterError *getFlutterError(NSError *error) {
       [[NSMutableDictionary alloc] init];
   NSInteger notificationId =
       [response.notification.request.identifier integerValue];
-  NSString *payload =
-      (NSString *)response.notification.request.content.userInfo[PAYLOAD];
+  NSDictionary *userInfo = response.notification.request.content.userInfo;
+  NSString *payload = [self extractPayloadFromUserInfo:userInfo];
+
   NSNumber *notificationIdNumber = [NSNumber numberWithInteger:notificationId];
   notitificationResponseDict[@"notificationId"] = notificationIdNumber;
   notitificationResponseDict[PAYLOAD] = payload;
@@ -1019,18 +1053,11 @@ static FlutterError *getFlutterError(NSError *error) {
   NSLog(@"[FlutterLocalNotificationsPlugin] Response details - actionIdentifier: %@, notificationId: %@", 
         response.actionIdentifier, response.notification.request.identifier);
   
-  if (![self isAFlutterLocalNotification:response.notification.request.content
-                                             .userInfo]) {
-    NSLog(@"[FlutterLocalNotificationsPlugin] Not a FlutterLocalNotification - userInfo: %@", 
-          response.notification.request.content.userInfo);
-    return;
-  }
-
+  NSDictionary *userInfo = response.notification.request.content.userInfo;
   NSInteger notificationId =
       [response.notification.request.identifier integerValue];
-  NSString *payload =
-      (NSString *)response.notification.request.content.userInfo[PAYLOAD];
-  
+  NSString *payload = [self extractPayloadFromUserInfo:userInfo];
+
   NSLog(@"[FlutterLocalNotificationsPlugin] Processing notification - ID: %ld, payload: %@, initialized: %@", 
         (long)notificationId, payload ?: @"(null)", _initialized ? @"YES" : @"NO");
 
@@ -1055,7 +1082,7 @@ static FlutterError *getFlutterError(NSError *error) {
         [[NSUserDefaults standardUserDefaults]
             stringArrayForKey:FOREGROUND_ACTION_IDENTIFIERS];
     NSLog(@"[FlutterLocalNotificationsPlugin] Foreground action identifiers: %@", foregroundActionIdentifiers);
-    
+
     if ([foregroundActionIdentifiers indexOfObject:response.actionIdentifier] !=
         NSNotFound) {
       NSLog(@"[FlutterLocalNotificationsPlugin] Foreground action detected");
